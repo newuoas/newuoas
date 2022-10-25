@@ -1,0 +1,2 @@
+g95 -Wall -Wextra -pedantic -g -c calfun.f 
+makefile:20 : la recette pour la cible « calfun.o » a échouée

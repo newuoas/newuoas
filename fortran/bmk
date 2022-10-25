@@ -1,0 +1,198 @@
+#!/bin/bash
+if [ $# -ne 4 -a $# -ne 5 ]
+then
+    echo "USAGE: bmk [PROBLEMNAME] LOWERDIM UPPERDIM DIMSTEP SOLVERNUM."
+    exit $#
+fi
+
+log=0
+#RANDNUM=10
+RANDNUM=5
+
+
+RESULTS=results
+
+make clean
+make
+
+if [ -f ./test ] 
+then
+    if [ $# -eq 4 ]
+    then
+        SOLVERNUM=$4
+        mkdir -p $RESULTS
+        echo $SOLVERNUM > $RESULTS/SOLVERNUM
+        echo $RANDNUM > $RESULTS/RANDNUM
+        echo $(( $(( $(( $2 - $1 )) / $3 )) + 1 ))> $RESULTS/DIMNUM
+#        cd $RESULTS
+#        ./clean.sh
+#        for (( i = 1; i <= $SOLVERNUM; i++))
+#        do
+#            for STAT in N F FOPTREC
+#            do
+#                rm -f $STAT$i
+#                rm -f *.$STAT$i
+#            done
+#        done
+#        rm -f DIM
+#        rm -f *.DIM
+#        cd ../
+    
+        DIMS="$1 $2 $3"
+#        for PROB in ARGLINA ARGLINA4 ARGLINB ARGLINC ARGTRIG ARWHEAD BDQRTIC BDQRTICP BDVALUE BROWNAL BROYDN3D BROYDN7D BRYBND CHAINWOO CHEBQUAD CHNROSNB CHPOWELLB CHPOWELLS CHROSEN COSINE CRAGGLVY CURLY10 CURLY20 CURLY30 CUBE DIXMAANE DIXMAANF DIXMAANG DIXMAANH DIXMAANI DIXMAANJ DIXMAANK DIXMAANL DIXMAANM DIXMAANN DIXMAANO DIXMAANP DQRTIC EDENSCH EG2 ENGVAL1 ERRINROS EXTROSNB EXTTET FIROSE FLETCBV2 FLETCBV3 FLETCHCR FREUROTH GENBROWN GENHUMPS GENROSE INDEF INTEGREQ LIARWHD LILIFUN3 LILIFUN4 MOREBV MOREBVL NCB20 NCB20B NONCVXUN NONCVXU2 NONDIA NONDQUAR PENALTY1 PENALTY2 PENALTY3 PENALTY3P POWELLSG POWER ROSENBROCK SBRYBND SBRYBNDL SCHMVETT SCOSINE SCOSINEL SEROSE SINQUAD SPARSINE SPARSQUR SPHRPTS SPMSRTLS SROSENBR TOINTGSS TOINTTRIG TQUARTIC TRIROSE VARDIM WOODS
+        for PROB in CHNROSNB CHPOWELLB CHPOWELLS CHROSEN COSINE CRAGGLVY CURLY10 CURLY20 CURLY30 CUBE DIXMAANE DIXMAANF DIXMAANG DIXMAANH DIXMAANI DIXMAANJ DIXMAANK DIXMAANL DIXMAANM DIXMAANN DIXMAANO DIXMAANP DQRTIC EDENSCH EG2 ENGVAL1 ERRINROS EXTROSNB EXTTET FIROSE FLETCBV2 FLETCBV3 FLETCHCR FREUROTH GENBROWN GENHUMPS GENROSE INDEF INTEGREQ LIARWHD LILIFUN3 LILIFUN4 MOREBV MOREBVL NCB20 NCB20B NONCVXUN NONCVXU2 NONDIA NONDQUAR PENALTY1 PENALTY2 PENALTY3 PENALTY3P POWELLSG POWER ROSENBROCK SBRYBND SBRYBNDL SCHMVETT SCOSINE SCOSINEL SEROSE SINQUAD SPARSINE SPARSQUR SPHRPTS SPMSRTLS SROSENBR TOINTGSS TOINTTRIG TQUARTIC TRIROSE VARDIM WOODS
+#       for PROB in ARGLINA ARGLINB ARGLINC ARWHEAD BDQRTIC BROWNAL BROYDN3D BRYBND CHROSEN COSINE CRAGGLVY CURLY10 CURLY20 CURLY30 DIXMAANE DIXMAANF DIXMAANG DIXMAANH DIXMAANI DIXMAANJ DIXMAANK DIXMAANL DIXMAANM DIXMAANN DIXMAANO DIXMAANP DQRTIC EDENSCH EG2 ENGVAL1 FLETCBV2 FLETCBV3 FREUROTH GENBROWN GENHUMPS INTEGREQ LIARWHD NONCVXUN PENALTY1 PENALTY2 POWER SBRYBND SCHMVETT SCOSINE SPARSINE SPARSQUR SPHRPTS TOINTGSS TOINTTRIG VARDIM
+        do
+            echo $PROB
+            for (( i = 1; i <= $SOLVERNUM; i++))
+            do
+                for STAT in N F FOPTREC 
+                do
+                    rm -f $PROB.$STAT$i
+                    rm -f $RESULTS/$PROB.$STAT$i
+                done
+            done
+            rm -f $PROB.DIM $PROB.log
+            rm -f $RESULTS/$PROB.DIM $RESULTS/$PROB.log
+
+            for (( RAND = 1; RAND <= $RANDNUM; RAND++))
+            do
+                echo $RAND
+                if [ $log -eq 1 ]
+                then
+                    ./test $PROB $DIMS $SOLVERNUM >>$PROB.log
+                    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++" >>$PROB.log
+                    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++" >>$PROB.log
+                else
+                    ./test $PROB $DIMS $SOLVERNUM >>/dev/null
+                fi
+                
+                for (( i = 1; i <= $SOLVERNUM; i++))
+                do
+                    for STAT in N F 
+                    do
+                        sed -i /^$/d $PROB.$STAT$i
+                        sed -i s/[[:space:]]//g $PROB.$STAT$i
+                    done
+                    sed -i 's/^[ \t]*//' $PROB.FOPTREC$i
+                    sed -i 's/[ \t]*$//' $PROB.FOPTREC$i
+                done
+                sed -i /^$/d $PROB.DIM
+                sed -i s/[[:space:]]//g $PROB.DIM
+
+                for (( i = 1; i <= $SOLVERNUM; i++))
+                do
+                    for STAT in N F FOPTREC
+                    do
+                        cat $PROB.$STAT$i >> $RESULTS/$PROB.$STAT$i
+                    done
+                done
+
+                if [ $RAND -eq 1 ]
+                then
+                    cat $PROB.DIM> $RESULTS/$PROB.DIM
+                fi
+
+                if [ $log -eq 1 ]
+                then
+                    cat $PROB.log>> $RESULTS/$PROB.log
+                fi
+
+                for (( i = 1; i <= $SOLVERNUM; i++))
+                do
+                    for STAT in N F FOPTREC 
+                    do
+                        rm -f $PROB.$STAT$i
+                    done
+                done
+                rm -f $PROB.DIM $PROB.log
+            done
+
+        done
+
+        cd $RESULTS
+        ./data.sh
+        matlab -nodesktop -nosplash  -r "cd $PWD; iternum; priternum; exit" 
+        cd ../
+
+
+    elif [ $# -eq 5 ]
+    then
+        mkdir -p $RESULTS
+        PROB=$1
+        SOLVERNUM=$5
+        echo $SOLVERNUM > $RESULTS/SOLVERNUM
+        echo $RANDNUM > $RESULTS/RANDNUM
+        echo $(( $(( $(( $3 - $2 )) / $4 )) + 1 ))> $RESULTS/DIMNUM
+
+        DIMS="$2 $3 $4"
+        echo $PROB
+        for (( i = 1; i <= $SOLVERNUM; i++))
+        do
+            for STAT in N F FOPTREC 
+            do
+                rm -f $PROB.$STAT$i
+                rm -f $RESULTS/$PROB.$STAT$i
+            done
+        done
+        rm -f $PROB.DIM $PROB.log
+        rm -f $RESULTS/$PROB.DIM $RESULTS/$PROB.log
+
+        for (( RAND = 1; RAND <= $RANDNUM; RAND++))
+        do
+            echo $RAND
+            if [ $log -eq 1 ]
+            then
+                ./test $PROB $DIMS $SOLVERNUM >>$PROB.log
+                echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++" >>$PROB.log
+                echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++" >>$PROB.log
+            else
+                ./test $PROB $DIMS $SOLVERNUM >>/dev/null
+            fi
+
+            for (( i = 1; i <= $SOLVERNUM; i++))
+            do
+                for STAT in N F 
+                do
+                    sed -i /^$/d $PROB.$STAT$i
+                    sed -i s/[[:space:]]//g $PROB.$STAT$i
+                done
+                sed -i 's/^[ \t]*//' $PROB.FOPTREC$i
+                sed -i 's/[ \t]*$//' $PROB.FOPTREC$i
+            done
+            sed -i /^$/d $PROB.DIM
+            sed -i s/[[:space:]]//g $PROB.DIM
+
+            for (( i = 1; i <= $SOLVERNUM; i++))
+            do
+                for STAT in N F FOPTREC
+                do
+                    cat $PROB.$STAT$i >> $RESULTS/$PROB.$STAT$i
+                done
+            done
+
+            if [ $RAND -eq 1 ]
+            then
+                cat $PROB.DIM> $RESULTS/$PROB.DIM
+            fi
+
+            if [ $log -eq 1 ]
+            then
+                cat $PROB.log>> $RESULTS/$PROB.log
+            fi
+
+            for (( i = 1; i <= $SOLVERNUM; i++))
+            do
+                for STAT in N F FOPTREC 
+                do
+                    rm -f $PROB.$STAT$i
+                done
+            done
+            rm -f $PROB.DIM $PROB.log
+
+        done
+        
+    fi
+fi
+
+exit

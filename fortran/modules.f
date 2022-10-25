@@ -1,0 +1,34 @@
+      MODULE STATISTICS
+        IMPLICIT NONE
+        INTEGER(KIND=4), PARAMETER :: MAXDIM = 2000
+        INTEGER(KIND=4), PARAMETER :: LWORK = 14*2000**2 ! About 448 MB.
+        !! LWORK is the length of the work space. It is required that 
+        !! It is at least (NPT+13)*(NPT+N)+3*N*(N+3)/2 (see newuoa.f).
+        !! When MAXDIM >=113 and NPT <= 3*N, 14*MAXDIM**2 is enough.
+        INTEGER(KIND=4), PARAMETER :: MAXFUNEVL = 50000
+
+        REAL(KIND=8) :: FOPTIMAL, FREC(MAXFUNEVL), FOPTREC(MAXFUNEVL)
+        INTEGER(KIND=4) :: NFEVL
+        COMMON /STAT/ FOPTIMAL, FREC, FOPTREC, NFEVL
+      END MODULE 
+
+      BLOCK DATA
+        IMPLICIT NONE
+        REAL(KIND=8) :: FOPTIMAL
+        INTEGER(KIND=4) :: NFEVL
+        COMMON /STAT/ FOPTIMAL, NFEVL
+        DATA FOPTIMAL /1.0D300/
+        DATA NFEVL /0/
+      END BLOCK DATA
+
+      MODULE PROBLEM 
+        IMPLICIT NONE
+        CHARACTER(LEN=20) :: PROB 
+        COMMON /PROBLEMNAME/ PROB
+      END MODULE
+      MODULE PERMUTE
+        USE STATISTICS
+        IMPLICIT NONE
+        INTEGER(KIND=4) :: PERM(MAXDIM)
+        COMMON /PERMUTATION/ PERM
+      END MODULE
