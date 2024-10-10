@@ -1,19 +1,19 @@
 function frec = testalg(solver, problem, n, options)
 
-% This version is not intended to be released. It is only for test. 
+% This version is not intended to be released. It is only for test.
 %
-% All rights reserved. 
+% All rights reserved.
 %
 % ZHANG Zaikun, 08/08/2016
 % Department of Applied Mathematics, The Hong Kong Polytechnic University
 
-global fval_history; 
+global fval_history;
 
-if (nargin == 4 && isfield(options, 'reproduce') && options.reproduce == true) % Set options.reproduce = true for reproducing results of the last experiment. 
+if (nargin == 4 && isfield(options, 'reproduce') && options.reproduce == true) % Set options.reproduce = true for reproducing results of the last experiment.
     load('seed.testalg.mat', 'seed');
 else
-    rng('shuffle'); 
-    seed = 1e8*(2*rand - 1); 
+    rng('shuffle');
+    seed = 1e8*(2*rand - 1);
     save('seed.testalg.mat', 'seed');
 end
 
@@ -23,7 +23,7 @@ end
 % 3. The randomness is independent of each other for different runs (indexed by ir).
 % 4. The randomness is independent of each other for different calls of testalg.
 % 5. The randomness is nearly independent of each other for different x.
-% 6. The randomness is reproducible. 
+% 6. The randomness is reproducible.
 
 rhoend = 1e-6;
 tol = rhoend;
@@ -41,7 +41,7 @@ if (nargin == 4)
     end
     if (isfield(options, 'rhoend'))
         rhoend = options.rhoend;
-        tol = rhoend;     
+        tol = rhoend;
     end
     if (isfield(options, 'maxfun'))
         maxfun = options.maxfun;
@@ -59,7 +59,7 @@ if (nargin == 4)
         nr = options.randrun;
     end
     if (isfield(options, 'noise'))
-        if (isnumeric(options.noise)) 
+        if (isnumeric(options.noise))
             noi.type = 'relative';
             noi.level = options.noise;
             options = rmfield(options, 'noise');
@@ -73,7 +73,7 @@ end
 
 if (randomizex0 == 0 && noiselevel == 0)
     nr = 1;
-end 
+end
 
 if (strcmpi('ALL', problem))
     prob = textread('problems', '%s');
@@ -90,24 +90,35 @@ end
 ns = length(sol);
 
 frec = NaN(np, ns, nr, maxfun);
-for ip = 1 : np 
+for ip = 1 : np
     display('+++++++++++++++++++++++++++++++++++++++++++++++++++++++');
     display(strcat(int2str(ip), '. ', prob{ip}, ':'));
     [x0, rhobeg] = setuptest(prob{ip}, n);
-    for is = 1 : ns 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Randomize the starting point and initial trust-region radius to make sure that the subspace
+    % method does not get the correct subspace by chance.
+    if (abs(randomizex0) == 0)
+        rng_save = rng;
+        rng(42);
+        x0 = x0 + 1e-1*randn(n,1).*max(0.1*ones(n, 1), abs(x0));
+        rhobeg = rhobeg + 1e-1*randn(1,1)*max(0.1, abs(rhobeg));
+        rng(rng_save);
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    for is = 1 : ns
         solv = sol{is};
         if (np*nr <= 20)
             display('-------------------------------------------------------');
         end
         display(strcat(sol{is}, ':'));
-        for ir = 1 : nr 
+        for ir = 1 : nr
             rng(int32(1e8*abs(sin(seed) + sin(double(ir)) + sin(sum(double(prob{ip}))) + sin(double(n)) + sin(1e8*randomizex0))));
             if (strcmpi('chebquad', prob{ip}))
-                xr = x0 + min(abs(randomizex0), 1e-1)*(2*rand(n,1) - 1).*max(ones(n, 1), abs(x0)); 
+                xr = x0 + min(abs(randomizex0), 1e-1)*(2*rand(n,1) - 1).*max(ones(n, 1), abs(x0));
             else
-                xr = x0 + randomizex0*randn(n,1).*max(ones(n, 1), abs(x0)); 
+                xr = x0 + randomizex0*randn(n,1).*max(ones(n, 1), abs(x0));
             end
-            if (exist('solv_options', 'var') == 1)  
+            if (exist('solv_options', 'var') == 1)
                 clear solv_options;
             end
             solv_options.rhobeg = rhobeg;
@@ -115,7 +126,7 @@ for ip = 1 : np
             solv_options.tol = tol;
             solv_options.maxfun = maxfun;
             solv_options.maxiter = maxiter;
-            solv_options.maxit = maxiter; 
+            solv_options.maxit = maxiter;
             solv_options.ftarget = ftarget;
             solv_options.npt = 2*n+1;
             solv_options.maxsubspacedim = 3;
@@ -144,7 +155,7 @@ for ip = 1 : np
                 solv_options.maxsubspacedim = min(n,20);
             end
 
-            if (exist('fun_options', 'var') == 1)  
+            if (exist('fun_options', 'var') == 1)
                 clear fun_options;
             end
             fun_options = options;
@@ -153,7 +164,7 @@ for ip = 1 : np
                 fun_options.noise.seed = 1e8*(2*rand - 1);
             end
 
-            fval_history = []; 
+            fval_history = [];
             x = feval(solv, @(x)evalobjfun(prob{ip}, x, fun_options), xr, solv_options);
             nf = length(fval_history);
             nf = min(nf, maxfun); % Some solvers do not respect maxfun strictly, for example, fminunc of matlab.
@@ -179,7 +190,7 @@ return;
 function f = evalobjfun(fun, x, options)
 
 %options:
-%regul: regul.lambda regul.p 
+%regul: regul.lambda regul.p
 %noise: noise.type noise.level noise.seed
 %prec
 %signif
@@ -187,7 +198,7 @@ function f = evalobjfun(fun, x, options)
 global fval_history;
 
 % Calculate the accurate function value, and save it to fval_history.
-f = evalfun(fun, x); 
+f = evalfun(fun, x);
 if (isfield(options, 'regul'))
     if (isfield(options.regul, 'lambda'))
         lambda = options.regul.lambda;
@@ -196,7 +207,7 @@ if (isfield(options, 'regul'))
         lambda = 10;
         p = options.regul;
     end
-    if (p >= 0) 
+    if (p >= 0)
         f = f + lambda*sum(abs(x).^p);
     end
 end
@@ -221,7 +232,7 @@ end
 if (isfield(options, 'prec'))
     if (strcmpi(options.prec, 'single') || strcmpi(options.prec, 's'))
         x = double(single(x));
-        f = single(evalfun(fun, x)); 
+        f = single(evalfun(fun, x));
         if (isfield(options, 'regul'))
             if (isfield(options.regul, 'lambda'))
                 lambda = options.regul.lambda;
@@ -230,7 +241,7 @@ if (isfield(options, 'prec'))
                 lambda = 10;
                 p = options.regul;
             end
-            if (p >= 0) 
+            if (p >= 0)
                 f = f + single(lambda*sum(abs(x).^p));
             end
         end
@@ -239,9 +250,9 @@ if (isfield(options, 'prec'))
 end
 
 if (isfield(options, 'signif'))
-    sig = min(max(1, int32(options.signif)), 16); 
+    sig = min(max(1, int32(options.signif)), 16);
     sf = round(f, sig, 'significant');
-    f = sf + (f-sf)*(1-sin(sin(double(sig)) + sin(1e8*f) + sum(abs(sin(1e8*x)) + sin(double(length(x))) + sin(sum(double(fun)))))); % This makes the truncation more "irregular". 
+    f = sf + (f-sf)*(1-sin(sin(double(sig)) + sin(1e8*f) + sum(abs(sin(1e8*x)) + sin(double(length(x))) + sin(sum(double(fun)))))); % This makes the truncation more "irregular".
 end
 
 return;

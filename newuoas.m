@@ -266,7 +266,7 @@ for iter = 1:maxiter % Begin main loop of NEWUOAs.
             halt = true;
             break;
         else
-            h = h/2;
+            h = h/2;  % Needed or not? h is updated below.
         end
     end
 
