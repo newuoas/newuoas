@@ -22,7 +22,8 @@ function [x, fx, exitflag, output] = newuoas(fun, x0, options)
 %
 % All rights reserved.
 %
-% ZHANG Zaikun, 08/08/2016
+% Updated on 14/11/2024 based on the version coded in 2011
+% Zaikun ZHANG
 % Department of Applied Mathematics, The Hong Kong Polytechnic University
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
